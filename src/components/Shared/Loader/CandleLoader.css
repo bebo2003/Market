@@ -1,0 +1,147 @@
+/* ✅ تعديل الخلفية */
+.wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background: black;
+  overflow: hidden;
+}
+
+/* ✅ الحاوية */
+.candles {
+  position: relative;
+  width: 200px;
+  height: 300px;
+}
+
+/* ✅ تأثير الوهج */
+.light__wave {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 165, 0, 0.3);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  animation: glow 1.5s infinite alternate ease-in-out;
+}
+
+/* ✅ الشموع */
+.candle1, .candle2 {
+  position: absolute;
+  bottom: 20px;
+}
+
+/* ✅ تكبير الشموع */
+.candle1__body, .candle2__body {
+  width: 50px;
+  height: 150px;
+  background: white;
+  border-radius: 15px;
+  position: relative;
+  border: 3px solid gray;
+}
+
+/* ✅ تعديل موضع الشمعة الثانية */
+.candle2 {
+  left: 80px; /* ✅ تحريكها لتكون جنب الأولى */
+}
+
+/* ✅ ضبط العيون */
+.candle1__eyes, .candle2__eyes {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+}
+
+.candle1__eyes-one, .candle1__eyes-two,
+.candle2__eyes-one, .candle2__eyes-two {
+  width: 10px;
+  height: 10px;
+  background: black;
+  border-radius: 50%;
+}
+
+/* ✅ الفم */
+.candle1__mouth {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 10px;
+  background: black;
+  border-radius: 10px 10px 0 0;
+}
+
+/* ✅ النار */
+.candle2__fire {
+  position: absolute;
+  top: -20px;
+  left: 100px;
+  width: 25px;
+  height: 50px;
+  background: orange;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  animation: flicker 0.3s infinite alternate ease-in-out;
+}
+
+/* ✅ الشرارات */
+.sparkles-one, .sparkles-two {
+  position: absolute;
+  top: -40px;
+  left: 100px;
+  width: 5px;
+  height: 5px;
+  background: yellow;
+  border-radius: 50%;
+  animation: sparkles 1s infinite alternate ease-in-out;
+}
+.sparkles-two {
+  left: 110px;
+  animation-delay: 0.3s;
+}
+
+/* ✅ الدخان */
+.candle__smoke-one, .candle__smoke-two {
+  position: absolute;
+  top: -30px;
+  left: 100px;
+  width: 15px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  animation: smoke 1.5s infinite alternate ease-in-out;
+}
+.candle__smoke-two {
+  left: 110px;
+  animation-delay: 0.5s;
+}
+
+/* ✅ الأنيميشن */
+@keyframes flicker {
+  0% { transform: translateX(-50%) scale(1); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1.2); opacity: 0.8; }
+}
+
+@keyframes glow {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes sparkles {
+  0% { opacity: 0.8; transform: translateY(0px) scale(1); }
+  100% { opacity: 0; transform: translateY(-15px) scale(1.2); }
+}
+
+@keyframes smoke {
+  0% { opacity: 0.5; transform: translateY(0px); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
