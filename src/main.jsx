@@ -15,6 +15,8 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import WishContextProvider from './Context/wishlistContext.jsx'
+import { register } from '../src/serviceWorkerRegistration.js';
+
 
 createRoot(document.getElementById('root')).render(
   // conterContext shayf el tokenContext lkn el token m4 4ayf el counter  
@@ -35,3 +37,4 @@ createRoot(document.getElementById('root')).render(
   
 
 )
+register();

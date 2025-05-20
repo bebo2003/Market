@@ -1,0 +1,113 @@
+/* TeamSection.css */
+
+:root {
+    --angle: 0deg;
+    --direction: 1;
+  }
+  
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
+  
+  body {
+    min-block-size: 100svb;
+    -webkit-font-smoothing: antialiased;
+    background-color: var(--surface-1);
+    color: var(--text-1);
+    font: var(--body);
+  }
+  
+  /* Additional CSS layers and keyframes omitted for brevity */
+  
+  
+  /* Continue other styles as necessary */
+  /* TeamSection.css */
+
+/* إضافات لتفعيل الحركة الدائرية */
+@keyframes rotate-images {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* تفعيل حركة التدوير الدائري على الكروت */
+.cards {
+  display: grid;
+  grid-gap: 16px;
+  padding: 16px;
+  list-style: none;
+  position: relative;
+  animation: rotate-images 40s linear infinite;
+}
+
+.card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 144px;
+  height: 144px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.avatar-link-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+}
+
+.visual {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1);
+  transition: transform 0.3s ease;
+}
+
+.avatar-link-wrapper:hover .avatar-img {
+  transform: scale(1.1);
+}
+
+/* تخصيص الشكل الجمالي */
+.card:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.card:nth-child(2) {
+  animation-delay: 2s;
+}
+
+.card:nth-child(3) {
+  animation-delay: 4s;
+}
+
+.card:nth-child(4) {
+  animation-delay: 6s;
+}
+
+.card:nth-child(5) {
+  animation-delay: 8s;
+}
+
+.card:nth-child(6) {
+  animation-delay: 10s;
+}

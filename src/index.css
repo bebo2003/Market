@@ -19,7 +19,7 @@
     --rating-color:#ffc908;
 }
 .active {
-    @apply bg-main p-1 text-white;
+    @apply p-1 text-white;
 }
 
 
@@ -65,8 +65,11 @@ a , a:hover{
 }
 .bg-main-light 
 {
-    background-color: var(--light-color) !important;
+  
 }
 .main-layout{
     @apply flex flex-wrap gap-y-3
+}
+.dark\:text-white:is(.dark *){
+    color : #6C2BD9 !important;
 }

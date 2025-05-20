@@ -1,107 +1,179 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import ClipLoader from 'react-spinners/ClipLoader';
-import { cartContext } from '../../Context/CartContext';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import axios from 'axios';
+import { loadStripe } from '@stripe/stripe-js';
+
+const stripePromise = loadStripe('pk_test_51RJkblDAuyRtx6Il19fwT1KZa69jmf3qhUTFvvy4qg3D6v3A4OGk26UtVEBKto9UBvHwBZEPb1FiCaxdbMxpTjvg00d2sBaOrR');
 
 export default function Checkout() {
-  const [isCallingApI, setIsCallingApI] = useState(false);
-  const [apiError, setApiError] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState(null);
+  const location = useLocation();
   const navigate = useNavigate();
-  
-  let { cashOnDelivery, onlinePayment } = useContext(cartContext);
+  const { order } = location.state || {};
+
+  const [isCallingApi, setIsCallingApi] = useState(false);
+
+  const token = localStorage.getItem('userToken');
 
   const initialValues = {
-    details: '',
-    phone: '',
-    city: '',
+    item_id: order?.item?.id || '',
+    start_date: '',
+    end_date: '',
+    delivery_address: order?.delivery_address || '',
   };
 
   const validationSchema = Yup.object().shape({
-    details: Yup.string().required('Required'),
-    phone: Yup.string().required('Required'),
-    city: Yup.string().required('Required'),
+    item_id: Yup.number().required('Item ID is required'),
+    start_date: Yup.string().required('Start date is required'),
+    end_date: Yup.string().required('End date is required'),
+    delivery_address: Yup.string().required('Delivery address is required'),
   });
 
   const shippingForm = useFormik({
     initialValues,
     validationSchema,
-    onSubmit: callPayment,
+    onSubmit: handleSubmit,
   });
 
-  async function callPayment(values) {
+  async function handleSubmit(values) {
+    if (!token) {
+      toast.error('User not authenticated. Please login again.', { autoClose: 3000 });
+      return;
+    }
+
+    setIsCallingApi(true);
+
     try {
-      setIsCallingApI(true);
-      if (paymentMethod === 'online') {
-        let response = await onlinePayment(values);
-        window.location.href = response.session.url;
-      } else if (paymentMethod === 'cash') {
-        await cashOnDelivery(values);
-        toast.success('Payment successful!', { position: 'top-right', autoClose: 2000 });
-        setTimeout(() => navigate('/'), 2000);
+      // ارسال بيانات الطلب لتسجيل الإيجار
+      const { data } = await axios.post(
+        'https://lavender-eel-222276.hostingersite.com/api/rent',
+        values,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log('Rent API response:', data);
+
+      const rental_id = data.rent?.id;
+      const item_id = data.rent?.item_id;
+
+      if (!rental_id || !item_id) {
+        toast.error('Rental ID or Item ID is missing in API response. Please try again.', { autoClose: 3000 });
+        setIsCallingApi(false);
+        return;
+      }
+
+      toast.success('Request sent successfully!', { autoClose: 2000 });
+
+      // طلب إنشاء جلسة Stripe مع الحقول الصحيحة rental_id و item_id
+      const sessionResponse = await axios.post(
+        'https://lavender-eel-222276.hostingersite.com/api/rent/session',
+        {
+          rental_id: rental_id,
+          item_id: item_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log('Stripe session response:', sessionResponse);
+
+      const sessionId = sessionResponse.data.session_id;
+
+      if (!sessionId) {
+        toast.error('Session ID is missing from Stripe response.', { autoClose: 3000 });
+        setIsCallingApi(false);
+        return;
+      }
+
+      // تحويل المستخدم إلى صفحة الدفع الخاصة بـ Stripe
+      const stripe = await stripePromise;
+      const result = await stripe.redirectToCheckout({ sessionId });
+
+      if (result.error) {
+        toast.error(result.error.message, { autoClose: 3000 });
       }
     } catch (error) {
-      setIsCallingApI(false);
-      setApiError('Payment failed. Please try again.');
+      console.error('Payment error:', error);
+
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message, { autoClose: 3000 });
+      } else if (error.message) {
+        toast.error(error.message, { autoClose: 3000 });
+      } else {
+        toast.error('Something went wrong. Please try again.', { autoClose: 3000 });
+      }
+    } finally {
+      setIsCallingApi(false);
     }
   }
 
   return (
-    <form onSubmit={shippingForm.handleSubmit} className="w-full max-w-lg mx-auto my-5 p-6 border border-gray-300 rounded-lg shadow-lg bg-white dark:bg-gray-900">
-      <h1 className='text-3xl sm:text-4xl text-gray-700 dark:text-gray-300 mb-6 text-center'>Shipping Info</h1>
-      {apiError && (
-        <div className="p-2 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
-          {apiError}
-        </div>
-      )}
-      
-      {['details', 'phone', 'city'].map((field) => (
-        <div key={field} className="relative z-0 w-full mb-5 group">
-          <input 
-            type="text"
+    <form
+      onSubmit={shippingForm.handleSubmit}
+      className="w-full max-w-lg mx-auto my-5 p-6 border border-gray-300 rounded-lg shadow-lg bg-white dark:bg-gray-900"
+    >
+      <h1 className="text-3xl text-center text-gray-800 dark:text-gray-200 mb-6">Rent an Item</h1>
+
+      <div className="mb-4">
+        <label htmlFor="item_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Item
+        </label>
+        <input
+          type="text"
+          name="item_id"
+          id="item_id"
+          value={order?.item?.title || ''}
+          disabled
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+        />
+      </div>
+
+      {['start_date', 'end_date', 'delivery_address'].map((field) => (
+        <div key={field} className="mb-4">
+          <label
+            htmlFor={field}
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize"
+          >
+            {field.replace('_', ' ')}
+          </label>
+          <input
+            type={field.includes('date') ? 'date' : 'text'}
             name={field}
-            onBlur={shippingForm.handleBlur}
+            id={field}
             value={shippingForm.values[field]}
             onChange={shippingForm.handleChange}
-            id={field}
-            className="block py-2.5 px-3 w-full text-sm text-gray-900 bg-transparent border border-gray-300 rounded-md appearance-none dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
-            placeholder=" "
-            required
+            onBlur={shippingForm.handleBlur}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
           />
-          <label htmlFor={field} className="absolute text-sm text-gray-500 dark:text-gray-400 top-3 left-3 transform scale-100 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 peer-focus:text-purple-600">
-            {field.charAt(0).toUpperCase() + field.slice(1)}
-          </label>
           {shippingForm.errors[field] && shippingForm.touched[field] && (
-            <div className="p-2 mt-2 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400">
-              {shippingForm.errors[field]}
-            </div>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{shippingForm.errors[field]}</p>
           )}
         </div>
       ))}
-      
-      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-5">
-        <label className="flex items-center cursor-pointer">
-          <input type="radio" name="payment" value="online" onChange={() => setPaymentMethod('online')} className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded" />
-          <span className='ml-3 text-gray-700 dark:text-gray-300'>Online Payment</span>
-        </label>
-        <label className="flex items-center cursor-pointer">
-          <input type="radio" name="payment" value="cash" onChange={() => setPaymentMethod('cash')} className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded" />
-          <span className='ml-3 text-gray-700 dark:text-gray-300'>Cash on Delivery</span>
-        </label>
-      </div>
-      
-      {isCallingApI ? (
-        <div className='w-full flex justify-center'>
-          <div className='bg-purple-600 p-3 rounded-md flex items-center'>
-            <ClipLoader className='text-purple-500' size={20} />
+
+      {isCallingApi ? (
+        <div className="w-full flex justify-center">
+          <div className="bg-purple-600 p-3 rounded-md flex items-center">
+            <ClipLoader className="text-purple-500" size={20} />
           </div>
         </div>
       ) : (
-        <button type="submit" disabled={!paymentMethod} className="text-white bg-purple-600 hover:bg-purple-700 block mx-auto font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800">
-          Pay Now
+        <button
+          type="submit"
+          className="mt-4 w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          disabled={isCallingApi}
+        >
+          Submit Rent Request
         </button>
       )}
     </form>

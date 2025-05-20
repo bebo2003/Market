@@ -48,8 +48,9 @@ export default function PopularCategory() {
     }, []);
 
     return (
-        <div className='py-20 px-5 bg-gray-100 overflow-hidden '>
-            <h2 className='mb-8 text-3xl font-bold text-center text-gray-800'>Shop Popular Categories</h2>
+        <div className='py-20 px-5  overflow-hidden  '>
+            <h2 className='mb-8 text-3xl font-bold text-center text-gray-800'
+         style={{color:'#6C2BD9'}}  >Shop Popular Categories</h2>
             <Slider {...settings}>
                 {categories.map(category => (
                     <div key={category._id} className='p-4'>

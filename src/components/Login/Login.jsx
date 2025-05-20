@@ -1,18 +1,117 @@
+// import React, { useState, useContext } from 'react';
+// import { useFormik } from 'formik';
+// import * as Yup from 'yup';
+// import axios from 'axios';
+// import { useNavigate } from 'react-router-dom';
+// import ClipLoader from "react-spinners/ClipLoader";
+// import { tokenContext } from '../../Context/tokenContext';
+// import './Login.module.css'
+// import { FaUser, FaPhoneAlt, FaLock, FaAt } from 'react-icons/fa';
+
+// export default function Login() {
+//     const [isCallingAPI, setIsCallingAPI] = useState(false);
+//     const [apiError, setApiError] = useState(null);
+//     let { setToken } = useContext(tokenContext);
+//     let navigate = useNavigate();
+
+//     const initialValues = {
+//         email: '',
+//         password: '',
+//     };
+
+//     const validationSchema = Yup.object({
+//         email: Yup.string().email("Invalid Email").required("Required"),
+//         password: Yup.string().required("Required"),
+//     });
+
+//     async function callLogin(values) {
+//         try {
+//             setIsCallingAPI(true);
+//             setApiError(null);
+
+//             let { data } = await axios.post(`https://lavender-eel-222276.hostingersite.com/api/login-customer`, values);
+
+//             if (data.token) {
+//                 // حفظ التوكن في localStorage
+//                 localStorage.setItem("userToken", data.token);
+
+//                 // تحديد نوع المستخدم (لنفترض أن الـ API تعيد هذا الحقل)
+//                 const userType = data.userType || "customer";
+//                 localStorage.setItem("customer", JSON.stringify({ email: values.email, type: userType }));
+
+//                 // تحديث الـ Context بالتوكن
+//                 setToken(data.token);
+
+//                 // توجيه المستخدم إلى الصفحة الرئيسية بعد تسجيل الدخول
+//                 navigate("/home");
+//             }
+//         } catch (error) {
+//             setApiError(error.response?.data?.message || "Login failed");
+//         } finally {
+//             setIsCallingAPI(false);
+//         }
+//     }
+
+//     const loginFormik = useFormik({
+//         initialValues,
+//         validationSchema,
+//         onSubmit: callLogin
+//     });
+
+//     return (
+//         // <form onSubmit={loginFormik.handleSubmit} className="w-[50%] mx-auto my-5">
+//         //     <h1 className='text-4xl text-gray-600'>Login:</h1>
+
+//         //     {apiError && <div className="p-2 mb-4 text-sm text-red-800 bg-red-50">{apiError}</div>}
+
+//         //     {/* Email */}
+//         //     <div className="mb-5">
+//         //         <input
+//         //             type="email"
+//         //             name="email"
+//         //             value={loginFormik.values.email}
+//         //             onChange={loginFormik.handleChange}
+//         //             placeholder="Email"
+//         //             className="block w-full p-2 border border-gray-300 rounded"
+//         //         />
+//         //         {loginFormik.errors.email && <p className="text-red-500">{loginFormik.errors.email}</p>}
+//         //     </div>
+
+//         //     {/* Password */}
+//         //     <div className="mb-5">
+//         //         <input
+//         //             type="password"
+//         //             name="password"
+//         //             value={loginFormik.values.password}
+//         //             onChange={loginFormik.handleChange}
+//         //             placeholder="Password"
+//         //             className="block w-full p-2 border border-gray-300 rounded"
+//         //         />
+//         //         {loginFormik.errors.password && <p className="text-red-500">{loginFormik.errors.password}</p>}
+//         //     </div>
+
+//         //     <button type="submit" className="bg-purple-600 text-white p-2 rounded w-full">
+//         //         {isCallingAPI ? <ClipLoader size={20} color="white" /> : "Login"}
+//         //     </button>
+//         // </form>
 
 
-import React, { useContext, useEffect, useState } from 'react';
-import styles from "./Login.module.css";
-import { useNavigate } from 'react-router-dom';
+//     );
+// }
+import React, { useState, useContext } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import ClipLoader from "react-spinners/ClipLoader";
 import { tokenContext } from '../../Context/tokenContext';
-
+import './Login.module.css';
+import { FaUser, FaPhoneAlt, FaLock, FaAt } from 'react-icons/fa';
+import bebo from'../../assets/images/istockphoto-1420737263-640_adpp_is.mp4'
 export default function Login() {
-    const [isCallingApI, setIsCallingApI] = useState(false);
+    const [isCallingAPI, setIsCallingAPI] = useState(false);
     const [apiError, setApiError] = useState(null);
-
+    const [userType, setUserType] = useState("customer");
     let { setToken } = useContext(tokenContext);
     let navigate = useNavigate();
 
@@ -21,72 +120,266 @@ export default function Login() {
         password: '',
     };
 
-    const validationSchema = Yup.object().shape({
+    const validationSchema = Yup.object({
         email: Yup.string().email("Invalid Email").required("Required"),
-        password: Yup.string().matches(new RegExp('^[A-Z][a-z0-9]{3,8}$'), 'Invalid password').required("Required"),
+        password: Yup.string().required("Required"),
     });
 
     async function callLogin(values) {
         try {
-            setIsCallingApI(true);
+            setIsCallingAPI(true);
             setApiError(null);
-            let { data } = await axios.post(`https://ecommerce.routemisr.com/api/v1/auth/signin`, values);
-            localStorage.setItem("userToken", data.token);
-            setToken(data.token);
-            setIsCallingApI(false);
-            navigate("/");
+
+            const endpoint =
+                userType === "customer"
+                    ? `https://lavender-eel-222276.hostingersite.com/api/login-customer`
+                    : `https://lavender-eel-222276.hostingersite.com/api/login-lender`;
+
+            let { data } = await axios.post(endpoint, values);
+
+            if (data.token) {
+                localStorage.setItem("userToken", data.token);
+                localStorage.setItem("userType", userType);
+
+                localStorage.setItem(
+                    "userData",
+                    JSON.stringify({
+                        email: values.email,
+                        type: userType,
+                        id: data.id,
+                    })
+                );
+
+                setToken(data.token);
+                navigate("/home");
+            } else {
+                setApiError("Login failed: no token received");
+            }
         } catch (error) {
-            setApiError(error.response.data.message, "Error");
-            setIsCallingApI(false);
+            setApiError(error.response?.data?.message || "Login failed");
+        } finally {
+            setIsCallingAPI(false);
         }
     }
 
-    const loginForm = useFormik({
+    const loginFormik = useFormik({
         initialValues,
         validationSchema,
         onSubmit: callLogin
     });
 
+    const [isChecked, setIsChecked] = useState(false);
+    const handleToggle = () => setIsChecked(!isChecked);
+
     return (
-        <form onSubmit={loginForm.handleSubmit} className="w-[50%] mx-auto my-5">
-            <h1 className='text-4xl text-gray-600'>Login Now:</h1>
+        <div className="relative min-h-screen overflow-hidden">
 
-            {apiError ? <div className="p-2 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-                {apiError}
-            </div> : ''}
+            {/* فيديو الخلفية */}
+            <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute top-0 left-0 w-full h-full object-cover z-0"
+            >
+                <source src={bebo } type="video/mp4" />
+                Your browser does not support the video tag.
+            </video>
 
-            {/* Email Input */}
-            <div className="relative z-0 w-full mb-5 group">
-                <input type="email" name="email" onBlur={loginForm.handleBlur} value={loginForm.values.email} onChange={loginForm.handleChange} id="floating_email" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-purple-600 peer" placeholder=" " required />
-                <label htmlFor="floating_email" className="absolute text-sm text-gray-500 transform -translate-y-6 scale-75 top-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 peer-focus:text-purple-600">User Email</label>
-            </div>
+            {/* طبقة تعتيم فوق الفيديو */}
+            <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60 z-10"></div>
 
-            {loginForm.errors.email && loginForm.touched.email ? <div className="p-2 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-                {loginForm.errors.email}
-            </div> : ''}
+            {/* محتوى الصفحة */}
+            <div className="relative z-20">
+                <div className="section">
+                    <div className="container">
+                        <div className="row full-height justify-content-center">
+                            <div className="col-12 text-center align-self-center py-5">
+                                <div className="section pb-5 pt-5 pt-sm-2 text-center">
+                                    <h6 className="mb-0 pb-3"><span>Log In </span><span>Sign Up</span></h6>
+                                    <input className="checkbox" type="checkbox" id="reg-log" checked={isChecked} onChange={handleToggle} />
+                                    <label htmlFor="reg-log"></label>
+                                    <div className="card-3d-wrap mx-auto">
+                                        <div className="card-3d-wrapper">
+                                            <div className="card-front">
+                                                <div className="center-wrap">
+                                                    <div className="section text-center">
+                                                        <h4 className="mb-4 pb-3">Log In</h4>
 
-            {/* Password Input */}
-            <div className="relative z-0 w-full mb-5 group">
-                <input type="password" name="password" onBlur={loginForm.handleBlur} value={loginForm.values.password} onChange={loginForm.handleChange} id="floating_password" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-purple-600 peer" placeholder=" " required />
-                <label htmlFor="floating_password" className="absolute text-sm text-gray-500 transform -translate-y-6 scale-75 top-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 peer-focus:text-purple-600">User Password</label>
-            </div>
+                                                        {/* اختيار نوع المستخدم */}
+                                                        <div className="mb-3">
+                                                            <label className="me-2">
+                                                                <input
+                                                                    type="radio"
+                                                                    value="customer"
+                                                                    checked={userType === "customer"}
+                                                                    onChange={() => setUserType("customer")}
+                                                                />
+                                                                <span className="ms-1">Customer</span>
+                                                            </label>
+                                                            <label className="ms-4">
+                                                                <input
+                                                                    type="radio"
+                                                                    value="lender"
+                                                                    checked={userType === "lender"}
+                                                                    onChange={() => setUserType("lender")}
+                                                                />
+                                                                <span className="ms-1">Lender</span>
+                                                            </label>
+                                                        </div>
 
-            {loginForm.errors.password && loginForm.touched.password ? <div className="p-2 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-                {loginForm.errors.password}
-            </div> : ''}
+                                                        {apiError && <div className="p-2 mb-4 text-sm text-red-800 bg-red-50">{apiError}</div>}
 
-            {/* Submit Button */}
-            {isCallingApI ? (
-                <div className='w-auto flex justify-end'>
-                    <div className='bg-purple-600 p-2 rounded-md'>
-                        <ClipLoader className='text-white' size={20} />
+                                                        <form onSubmit={loginFormik.handleSubmit}>
+                                                            <div className="form-group">
+                                                                <input
+                                                                    type="email"
+                                                                    name="email"
+                                                                    value={loginFormik.values.email}
+                                                                    onChange={loginFormik.handleChange}
+                                                                    placeholder="Email"
+                                                                    className="form-style"
+                                                                />
+                                                                <FaAt className="input-icon" />
+                                                                {loginFormik.errors.email && <p className="text-red-500">{loginFormik.errors.email}</p>}
+                                                            </div>
+                                                            <div className="form-group mt-2">
+                                                                <input
+                                                                    type="password"
+                                                                    name="password"
+                                                                    value={loginFormik.values.password}
+                                                                    onChange={loginFormik.handleChange}
+                                                                    placeholder="Password"
+                                                                    className="form-style"
+                                                                />
+                                                                <FaLock className="input-icon" />
+                                                                {loginFormik.errors.password && <p className="text-red-500">{loginFormik.errors.password}</p>}
+                                                            </div>
+                                                            <button type="submit" className="btn mt-4">
+                                                                {isCallingAPI ? <ClipLoader size={20} color="white" /> : "Login"}
+                                                            </button>
+                                                        </form>
+
+                                                        <p className="mb-0 mt-4 text-center"><a href="#" className="link">Forgot your password?</a></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* يمكن لاحقًا إضافة واجهة Sign Up */}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            ) : (
-                <button type="submit" className="text-white bg-purple-600 hover:bg-purple-700 block ml-auto focus:ring-4 focus:outline-none focus:ring-purple-500 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center">
-                    Login
-                </button>
-            )}
-        </form>
+            </div>
+        </div>
     );
 }
+
+
+
+
+// import React, { useState, useContext } from "react";
+// import { useFormik } from "formik";
+// import * as Yup from "yup";
+// import axios from "axios";
+// import { useNavigate } from "react-router-dom";
+// import ClipLoader from "react-spinners/ClipLoader";
+// import { tokenContext } from "../../Context/tokenContext";
+
+// export default function Login() {
+//     const [isCallingAPI, setIsCallingAPI] = useState(false);
+//     const [apiError, setApiError] = useState(null);
+//     let { setToken } = useContext(tokenContext);
+//     let navigate = useNavigate();
+
+//     const initialValues = {
+//         email: "",
+//         password: "",
+//     };
+
+//     const validationSchema = Yup.object({
+//         email: Yup.string().email("Invalid Email").required("Required"),
+//         password: Yup.string().required("Required"),
+//     });
+
+//     async function callLogin(values) {
+//         try {
+//             setIsCallingAPI(true);
+//             setApiError(null);
+
+//             let { data } = await axios.post(
+//                 "https://mediumturquoise-kingfisher-120725.hostingersite.com/api/guest_hotel/login",
+//                 values
+//             );
+
+//             if (data.token) {
+//                 // حفظ التوكن في localStorage
+//                 localStorage.setItem("userToken", data.token);
+
+//                 // تحديد نوع المستخدم
+//                 const userType = data.userType || "user";
+//                 localStorage.setItem("user", JSON.stringify({ email: values.email, type: userType }));
+
+//                 // تحديث `Context` بالتوكن
+//                 setToken(data.token);
+
+//                 // إعادة التوجيه حسب نوع المستخدم
+//                 if (userType === "admin") {
+//                     navigate("/admin-dashboard"); // توجيه إلى لوحة التحكم إذا كان المدير
+//                 } else {
+//                     navigate("/home"); // توجيه إلى الصفحة الرئيسية للمستخدم العادي
+//                 }
+//             }
+//         } catch (error) {
+//             setApiError(error.response?.data?.message || "Login failed");
+//         } finally {
+//             setIsCallingAPI(false);
+//         }
+//     }
+
+//     const loginFormik = useFormik({
+//         initialValues,
+//         validationSchema,
+//         onSubmit: callLogin,
+//     });
+
+//     return (
+//         <form onSubmit={loginFormik.handleSubmit} className="w-[50%] mx-auto my-5">
+//             <h1 className="text-4xl text-gray-600">Login:</h1>
+
+//             {apiError && <div className="p-2 mb-4 text-sm text-red-800 bg-red-50">{apiError}</div>}
+
+//             {/* Email */}
+//             <div className="mb-5">
+//                 <input
+//                     type="email"
+//                     name="email"
+//                     value={loginFormik.values.email}
+//                     onChange={loginFormik.handleChange}
+//                     placeholder="Email"
+//                     className="block w-full p-2 border border-gray-300 rounded"
+//                 />
+//                 {loginFormik.errors.email && <p className="text-red-500">{loginFormik.errors.email}</p>}
+//             </div>
+
+//             {/* Password */}
+//             <div className="mb-5">
+//                 <input
+//                     type="password"
+//                     name="password"
+//                     value={loginFormik.values.password}
+//                     onChange={loginFormik.handleChange}
+//                     placeholder="Password"
+//                     className="block w-full p-2 border border-gray-300 rounded"
+//                 />
+//                 {loginFormik.errors.password && <p className="text-red-500">{loginFormik.errors.password}</p>}
+//             </div>
+
+//             <button type="submit" className="bg-purple-600 text-white p-2 rounded w-full">
+//                 {isCallingAPI ? <ClipLoader size={20} color="white" /> : "Login"}
+//             </button>
+//         </form>
+//     );
+// }
